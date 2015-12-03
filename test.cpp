@@ -138,19 +138,16 @@ main(void)
 		return (-1);
 
 	size_t				size = 10;
-	size_t				oSize = (sizeof(float) * size) * size;
-	float				data[size * size];
-	float				data_out[size * size];
+	size_t				oSize = (sizeof(float) * size);
+	float				data[size];
+	float				data_out[size];
 	cl_mem				input;
 	cl_mem				output;
 
 	for (size_t i = 0; i < size; i++)
 	{
-		for (size_t j = 0; j < size; j++)
-		{
-			data[i * size + j] = 0;
-			data_out[i * size + j] = 0;
-		}
+			data[i] = 0;
+			data_out[i] = 0;
 	}
 
 	input = clCreateBuffer(context, CL_MEM_READ_ONLY, oSize, NULL, NULL);
@@ -164,8 +161,7 @@ main(void)
 	for (size_t i = 0; i < size; i++)
 	{
 		std::cout << i << ": ";
-		for (size_t j = 0; j < size; j++)
-			std::cout << data[i * size + j] << "| ";
+			std::cout << data[i] << "| ";
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
@@ -178,10 +174,10 @@ main(void)
 	for (size_t i = 0; i < size; i++)
 	{
 		std::cout << i << ": ";
-		for (size_t j = 0; j < size; j++)
-			std::cout << data[i * size + j] << "| ";
+			std::cout << data_out[i] << "| ";
 		std::cout << std::endl;
 	}
+	std::cout << std::endl;
 
 	clReleaseKernel(kernel);
 	clReleaseProgram(program);
