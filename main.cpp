@@ -1,5 +1,10 @@
 #include <stdio.h>
-#include <OpenCL/opencl.h>
+#ifdef __APPLE__
+	#include <OpenCL/opencl.h>
+#else
+	#include <CL/cl.h>
+#endif
+
 
 #define DATA_SIZE 10
 
@@ -53,7 +58,7 @@ int main(void)
 	// create a context with the GPU device
 	context = clCreateContext(properties,1,&device_id,NULL,NULL,&err);
 
-	// create command queue using the context and device
+	// // create command queue using the context and device
 	command_queue = clCreateCommandQueue(context, device_id, 0, &err);
 
 	// create a program from the kernel source code

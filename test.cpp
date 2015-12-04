@@ -1,4 +1,9 @@
-#include <OpenCL/opencl.h>
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#ifdef __APPLE__
+	#include <OpenCL/opencl.h>
+#else
+	#include <CL/cl.h>
+#endif
 
 #include <iostream>
 
@@ -39,7 +44,12 @@ openCLGetCommandQueue(cl_context context, cl_device_id device_id, cl_command_que
 {
 	cl_int			err;
 
+	#ifndef __LINUX__
+	*command_queue = clCreateCommandQueueWithProperties(context, device_id, NULL, &err);
+	#elif __APPLE__
 	*command_queue = clCreateCommandQueue(context,  device_id, 0, &err);
+	#endif
+
 	if (err != CL_SUCCESS)
 		std::cerr << "clCreateCommandQueue error: " << err << std::endl;
 	return (err);
@@ -137,41 +147,38 @@ main(void)
 	if (OpenCLCreateKernel(program, std::string("hello").c_str(), &kernel) != CL_SUCCESS)
 		return (-1);
 
-	size_t				size = 10;
-	size_t				oSize = (sizeof(float) * size);
-	float				data[size];
-	float				data_out[size];
+
+	#define				NUM_ELEMENTS_X 10
+	#define				NUM_ELEMENTS_Y 10
+	#define				NUM_ELEMENTS (NUM_ELEMENTS_X * NUM_ELEMENTS_Y)
+
+	float				data[NUM_ELEMENTS];
+	float				data_out[NUM_ELEMENTS];
 	cl_mem				input;
 	cl_mem				output;
 
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < NUM_ELEMENTS; i++)
 	{
 			data[i] = 0;
 			data_out[i] = 0;
 	}
 
-	input = clCreateBuffer(context, CL_MEM_READ_ONLY, oSize, NULL, NULL);
-	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, oSize, NULL, NULL);
+	input = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(*data) * NUM_ELEMENTS, NULL, NULL);
+	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(*data) * NUM_ELEMENTS, NULL, NULL);
 
-	clEnqueueWriteBuffer(command_queue, input, CL_TRUE, 0, oSize, data, 0, NULL, NULL);
+	clEnqueueWriteBuffer(command_queue, input, CL_TRUE, 0, sizeof(*data) * NUM_ELEMENTS, data, 0, NULL, NULL);
 
 	clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
 	clSetKernelArg(kernel, 1, sizeof(cl_mem), &output);
 
-	for (size_t i = 0; i < size; i++)
-	{
-		std::cout << i << ": ";
-			std::cout << data[i] << "| ";
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
+	size_t				global_item_size = NUM_ELEMENTS;
 
-	clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &size, NULL, 0, NULL, NULL);
+	clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, NULL, 0, NULL, NULL);
 	clFinish(command_queue);
 
-	clEnqueueReadBuffer(command_queue, output, CL_TRUE, 0, oSize, data_out, 0, NULL, NULL);
+	clEnqueueReadBuffer(command_queue, output, CL_TRUE, 0, sizeof(*data) * NUM_ELEMENTS, data_out, 0, NULL, NULL);
 
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < NUM_ELEMENTS; i++)
 	{
 		std::cout << i << ": ";
 			std::cout << data_out[i] << "| ";
@@ -179,6 +186,8 @@ main(void)
 	}
 	std::cout << std::endl;
 
+	clReleaseMemObject(input);
+	clReleaseMemObject(output);
 	clReleaseKernel(kernel);
 	clReleaseProgram(program);
 	clReleaseCommandQueue(command_queue);
