@@ -1,4 +1,3 @@
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #ifdef __APPLE__
 	#include <OpenCL/opencl.h>
 #else
@@ -99,7 +98,7 @@ openCLGetProgramFromFile(cl_context context, const char *path, cl_program *progr
 }
 
 cl_int
-OpenCLBuildProgram(cl_program program)
+openCLBuildProgram(cl_program program)
 {
 	cl_int				err;
 
@@ -120,8 +119,52 @@ OpenCLCreateKernel(cl_program program, const char *kernel_name, cl_kernel *kerne
 	return (err);
 }
 
+typedef struct			s_cl_data
+{
+	cl_device_id		device_id;
+	cl_context			context;
+	cl_command_queue	command_queue;
+	cl_program			program;
+	cl_kernel			kernel;
+}						t_cl_data;
+
+int
+OpenCLInit(t_cl_data *cl_data)
+{
+	cl_int				err;
+
+	if ((err = openCLGetDeviceId(&cl_data->device_id)) != 0)
+		return (err);
+	if ((err = openCLGetContext(&cl_data->device_id, &cl_data->context)) != CL_SUCCESS)
+		return (err);
+	if ((err = openCLGetCommandQueue(cl_data->context, cl_data->device_id, &cl_data->command_queue)) != CL_SUCCESS)
+	{
+		clReleaseContext(cl_data->context);
+		return (err);
+	}
+	return (CL_SUCCESS);
+}
+
+void
+OpenCLRelease(t_cl_data *cl_data)
+{
+	// clReleaseKernel(cl_data->kernel);
+	// clReleaseProgram(cl_data->program);
+	clReleaseCommandQueue(cl_data->command_queue);
+	clReleaseContext(cl_data->context);
+}
+
 int
 main(void)
+{
+	t_cl_data			cl_data;
+
+	OpenCLInit(&cl_data);
+	OpenCLRelease(&cl_data);
+}
+
+int
+main2(void)
 {
 	cl_device_id		device_id;
 	cl_context			context;
@@ -148,19 +191,17 @@ main(void)
 		return (-1);
 
 
-	#define				NUM_ELEMENTS_X 10
-	#define				NUM_ELEMENTS_Y 10
+	#define				NUM_ELEMENTS_X 1920
+	#define				NUM_ELEMENTS_Y 1080
 	#define				NUM_ELEMENTS (NUM_ELEMENTS_X * NUM_ELEMENTS_Y)
 
 	float				data[NUM_ELEMENTS];
-	float				data_out[NUM_ELEMENTS];
 	cl_mem				input;
 	cl_mem				output;
 
 	for (size_t i = 0; i < NUM_ELEMENTS; i++)
 	{
-			data[i] = 0;
-			data_out[i] = 0;
+		data[i] = 0;
 	}
 
 	input = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(*data) * NUM_ELEMENTS, NULL, NULL);
@@ -171,20 +212,22 @@ main(void)
 	clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
 	clSetKernelArg(kernel, 1, sizeof(cl_mem), &output);
 
-	size_t				global_item_size = NUM_ELEMENTS;
+	size_t				global_item_size[2] = {NUM_ELEMENTS_X, NUM_ELEMENTS_Y};
+    // size_t				local_item_size[2] = {4, 4};
 
-	clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, NULL, 0, NULL, NULL);
+	clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, NULL, 0, NULL, NULL);
 	clFinish(command_queue);
 
-	clEnqueueReadBuffer(command_queue, output, CL_TRUE, 0, sizeof(*data) * NUM_ELEMENTS, data_out, 0, NULL, NULL);
+	clEnqueueReadBuffer(command_queue, output, CL_TRUE, 0, sizeof(*data) * NUM_ELEMENTS, data, 0, NULL, NULL);
 
-	for (size_t i = 0; i < NUM_ELEMENTS; i++)
-	{
-		std::cout << i << ": ";
-			std::cout << data_out[i] << "| ";
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
+	// for (size_t i = 0; i < NUM_ELEMENTS_Y; i++)
+	// {
+	// 	std::cout << i << ": ";
+	// 	for (size_t j = 0; j < NUM_ELEMENTS_X; j++)
+	// 		std::cout << data[i * NUM_ELEMENTS_X + j] << "| ";
+	// 	std::cout << std::endl;
+	// }
+	// std::cout << std::endl;
 
 	clReleaseMemObject(input);
 	clReleaseMemObject(output);
