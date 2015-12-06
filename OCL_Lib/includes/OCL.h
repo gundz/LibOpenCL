@@ -22,6 +22,9 @@ OCLInit(t_cl_data *cl_data);
 cl_int
 OCLBuildPRogram(t_cl_data *cl_data, char *path);
 
+cl_int
+OCLCreateKernel(t_cl_data *cl_data, char *name);
+
 
 
 

@@ -6,13 +6,20 @@ main(void)
 {
 	t_cl_data			cl_data;
 
-	OCLInit(&cl_data);
-	OCLBuildPRogram(&cl_data, "test.cl");
-
-	// clReleaseKernel(cl_data.kernel);
-	clReleaseProgram(cl_data.program);
-	clReleaseCommandQueue(cl_data.command_queue);
-	clReleaseContext(cl_data.context);
+	if (OCLInit(&cl_data) == CL_SUCCESS)
+	{
+		if (OCLBuildPRogram(&cl_data, "test.cl") == CL_SUCCESS)
+		{
+			if (OCLCreateKernel(&cl_data, "hello") == CL_SUCCESS)
+			{
+				printf("Test de ouf !\n");
+				clReleaseKernel(cl_data.kernel);
+			}
+			clReleaseProgram(cl_data.program);
+		}
+		clReleaseCommandQueue(cl_data.command_queue);
+		clReleaseContext(cl_data.context);
+	}
 }
 
 int

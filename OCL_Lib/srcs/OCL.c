@@ -28,3 +28,13 @@ OCLBuildPRogram(t_cl_data *cl_data, char *path)
 		return (err);
 	return (CL_SUCCESS);
 }
+
+cl_int
+OCLCreateKernel(t_cl_data *cl_data, char *name)
+{
+	cl_int				err;
+
+	if ((err = openCLCreateKernel(cl_data->program, name, &cl_data->kernel)) != CL_SUCCESS)
+		return (err);
+	return (CL_SUCCESS);
+}
