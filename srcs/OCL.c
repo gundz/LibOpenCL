@@ -24,7 +24,7 @@ OCLBuildPRogram(t_cl_data *cl_data, char *path)
 
 	if ((err = openCLGetProgramFromFile(cl_data->context, path, &cl_data->program)) != CL_SUCCESS)
 		return (err);
-	if ((err = openCLBuildProgram(cl_data->program)) != CL_SUCCESS)
+	if ((err = openCLBuildProgram(cl_data->program, cl_data->device_id)) != CL_SUCCESS)
 		return (err);
 	return (CL_SUCCESS);
 }

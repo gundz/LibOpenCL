@@ -44,7 +44,7 @@ cl_int
 openCLGetProgramFromFile(cl_context context, const char *path, cl_program *program);
 
 cl_int
-openCLBuildProgram(cl_program program);
+openCLBuildProgram(cl_program program, cl_device_id device_id);
 
 cl_int
 openCLCreateKernel(cl_program program, const char *kernel_name, cl_kernel *kernel);
