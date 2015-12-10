@@ -10,8 +10,11 @@ openCLBuildProgram(cl_program program, cl_device_id device_id)
 	cl_program_build_info	status;
 	size_t					log_size;
 	char					*log;
+//	const char				*options = "-Werror";
 
 	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+
+//	err = clBuildProgram(program, 0, NULL, options, NULL, NULL);
 	if (err != CL_SUCCESS)
 	{
 		clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &status, NULL);

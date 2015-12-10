@@ -14,6 +14,7 @@ typedef struct			s_cl_data
 	cl_command_queue	command_queue;
 	cl_program			program;
 	cl_kernel			kernel;
+	cl_mem				output;
 }						t_cl_data;
 
 cl_int
