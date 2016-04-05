@@ -15,6 +15,7 @@ typedef struct			s_cl_data
 	cl_program			program;
 	cl_kernel			kernel;
 	cl_mem				output;
+	cl_mem				input;
 }						t_cl_data;
 
 cl_int
